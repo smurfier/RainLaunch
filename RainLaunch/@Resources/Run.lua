@@ -24,7 +24,7 @@ function Initialize()
 end
 
 function Run()
-	SKIN:Bang('!SetVariable','Output','')
+	SKIN:Bang('!SetVariable','Output','Run...')
 	SKIN:Bang('!HideMeter','Copy')
 	local command = SKIN:GetVariable('Run')
 	local func,term = string.match(command, '^([^%s]+) (.+)')
