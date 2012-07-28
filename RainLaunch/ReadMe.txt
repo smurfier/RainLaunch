@@ -5,13 +5,20 @@ Web
 	Double word completes to: http://www.first.second
 	Tripple word completes to: http://first.second.third
 	
+	Use:
+		Web rainmeter.net
+	
 Calc
 	Executes Rainmeter style calculations.
 	Outputs to the skin window. Right-click on the results to copy to the clipboard.
 	
+	Use:
+		Calc SQRT(9)
+	
 ===== Defining Search Engines ===
 Search engines are defined in the [Search] section of Run.cfg
-All spaces are substituted for %20 on execution in order to ensure compatibility.
+The name of the Search must be a single word.
+All spaces in the UserInput are substituted for %20 on execution in order to ensure compatibility.
 
 	Example:
 		Google="http://google.com/search?q=$UserInput$"
@@ -30,11 +37,12 @@ Simple macros are defined by a name and an action.
 	Use:
 		Forum
 	
-User input functions are defined the same as simple macros, placing $UserInput$ where the user input needs to be placed.
-Spaces are preserved in macro functions.
+User input functions are defined the same as simple macros.
+placing \N denotes where the user input is places. N is actually a number denoting a parameter. Up to 9 parameters can be specified.
+Spaces are preserved in user input functions.
 
 	Example:
-		copy=!SetClip """$UserInput$"""
+		copy=!SetClip """\1"""
 	
 	Use:
 		Copy Some Text
