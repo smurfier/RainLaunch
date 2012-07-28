@@ -25,7 +25,6 @@ end
 
 function Run()
 	SKIN:Bang('!SetVariable','Output','Run...')
-	SKIN:Bang('!HideMeter','Copy')
 	local command = SKIN:GetVariable('Run')
 	local func,term = string.match(command, '^([^%s]+) (.+)')
 	func = string.lower(func or '')
@@ -41,7 +40,6 @@ function Run()
 	elseif func == 'calc' and term then
 		local value = SKIN:ParseFormula('('..term..')')
 		SKIN:Bang('!SetVariable', 'Output', value)
-		SKIN:Bang('!ShowMeter','Copy')
 	elseif Execute[func] and term then
 		if string.match(Execute[func],'%$UserInput%$') then
 			local text = string.gsub(Execute[func], '%$UserInput%$', term)
