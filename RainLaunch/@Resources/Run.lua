@@ -51,7 +51,8 @@ function Run()
 					local text = string.gsub(Execute[func], '\\(%d)(%b{})', function(num, list)
 						local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
 						for word in string.gmatch(list, '[^%|{}]+') do
-							if string.lower(word) == string.lower(par) or string.match(par, word) then
+							local w,p = string.lower(word),string.lower(par)
+							if w == p or string.match(p, w) then
 								return par
 							else
 								err = true
