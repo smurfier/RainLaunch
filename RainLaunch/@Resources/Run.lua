@@ -26,8 +26,7 @@ end
 
 function Run()
 	local command = SKIN:GetVariable('Run')
-	local args = {}
-	for word in string.gmatch(command, '[^%s]+') do table.insert(args, word) end
+	local args = Delim(command, '%s')
 	
 	if #args>0 then
 		local func = string.lower(table.remove(args, 1))
@@ -39,8 +38,7 @@ function Run()
 			local line = string.gsub(Search[func], '\\1', text)
 			SKIN:Bang('"'..line..'"')
 		elseif func == 'web' and #args > 0 then -- Web
-			local tbl = {}
-			for word in string.gmatch(table.concat(args,'%%20'), '[^%.]+') do table.insert(tbl, word) end
+			local tbl = Delim(table.concat(args,'%%20'), '%.')
 			SKIN:Bang('"http://'..(#tbl >= 3 and '' or 'www.')..table.concat(tbl,'.')..(#tbl >= 2 and '"' or '.com"'))
 		elseif Execute[func] and #args > 0 then -- Custom
 			if string.match(Execute[func],'\\%d') then
@@ -84,4 +82,10 @@ end
 function Output(outtext)
 	SKIN:Bang('!EnableMeasure', 'Reset')
 	SKIN:Bang('!SetVariable', 'Output', outtext)
+end
+
+function Delim(input, delimiter)
+	local tbl = {}
+	for word in string.gmatch(input, '[^'..delimiter..']+') do table.insert(tbl, word) end
+	return tbl
 end
