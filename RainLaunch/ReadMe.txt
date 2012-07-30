@@ -1,6 +1,8 @@
 ===== Built In Functions =====
 Web
 	Autocompletes web addresses.
+	All spaces are substituted for %20 on execution in order to ensure compatibility.
+	
 	Single word completes to: http://wwww.first.com
 	Double word completes to: http://www.first.second
 	Tripple word completes to: http://first.second.third
@@ -18,10 +20,10 @@ Calc
 ===== Defining Search Engines ===
 Search engines are defined in the [Search] section of Run.cfg
 The name of the Search must be a single word.
-All spaces in the UserInput are substituted for %20 on execution in order to ensure compatibility.
+All spaces in the User Input are substituted for %20 on execution in order to ensure compatibility.
 
 	Example:
-		Google="http://google.com/search?q=$UserInput$"
+		Google="http://google.com/search?q=\1"
 
 	Use:
 		Google Search Term
@@ -38,11 +40,28 @@ Simple macros are defined by a name and an action.
 		Forum
 	
 User input functions are defined the same as simple macros.
-placing \N denotes where the user input is places. N is actually a number denoting a parameter. Up to 9 parameters can be specified.
-Spaces are preserved in user input functions.
+Placing \N denotes where the user input is placed. N is a number denoting a parameter. Up to 9 parameters can be specified.
 
 	Example:
 		copy=!SetClip """\1"""
+
+In order to define a list of possible inputs, place the pipe delimited list inside of curly brackets after the input number.
+Lua pattern matching may also be used in input lists to validate the input.
+
+	Example:
+		music=!CommandMeasure NowPlaying "\1{Play|Pause|Next|Previous|SetVolume [%+%-]?%d+|SetPosition [%+%-]?%d+}"
+
+Spaces are used between parameters with the end being concatenated for the final parameter.
+Spaces are preserved in user input functions.
 	
 	Use:
 		Copy Some Text
+		Music SetVolume +10
+		
+		
+===== Known Limitiations =====
+Due to a limitation in Rainmeter, user-input text may not include quotation marks. If it does, the quotes will be stripped from the command.
+
+Leading and trailing spaces are not clipped from command names.
+
+With the current implementation of Lua, the use of Unicode characters is unwise.

@@ -24,19 +24,7 @@ function Initialize()
 	end
 end
 
-function Update()
-	if Timer > 0 then
-		Timer = Timer-1
-	elseif Timer == 0 then
-		Timer = -1
-		SKIN:Bang('!SetVariable', 'Output', 'Run...')
-		SKIN:Bang('!DisableMeasure', 'Lua')
-	end
-end
-
 function Run()
-	SKIN:Bang('!SetVariable', 'Output', 'Run...')
-	Timer = -1
 	local command = SKIN:GetVariable('Run')
 	local args = {}
 	for word in string.gmatch(command, '[^%s]+') do table.insert(args, word) end
@@ -95,7 +83,6 @@ function Run()
 end
 
 function Output(outtext)
-	Timer = 300
-	SKIN:Bang('!EnableMeasure', 'Lua')
+	SKIN:Bang('!EnableMeasure', 'Reset')
 	SKIN:Bang('!SetVariable', 'Output', outtext)
 end
