@@ -31,18 +31,18 @@ function Run()
 	
 	if #args>0 then
 		local func = string.lower(table.remove(args, 1))
-		if Search[func] and #args > 0 then
+		if string.match(command, '^=.+') then
+			local value = SKIN:ParseFormula('('..string.match(command, '^=(.+)')..')')
+			Output(value)
+		elseif Search[func] and #args > 0 then -- Search
 			local text = table.concat(args, '%%20')
 			local line = string.gsub(Search[func], '\\1', text)
 			SKIN:Bang('"'..line..'"')
-		elseif func == 'web' and #args > 0 then
+		elseif func == 'web' and #args > 0 then -- Web
 			local tbl = {}
 			for word in string.gmatch(table.concat(args,'%%20'), '[^%.]+') do table.insert(tbl, word) end
 			SKIN:Bang('"http://'..(#tbl >= 3 and '' or 'www.')..table.concat(tbl,'.')..(#tbl >= 2 and '"' or '.com"'))
-		elseif func == 'calc' and #args > 0 then
-			local value = SKIN:ParseFormula('('..table.concat(args)..')')
-			Output(value)
-		elseif Execute[func] and #args > 0 then
+		elseif Execute[func] and #args > 0 then -- Custom
 			if string.match(Execute[func],'\\%d') then
 				local test = 0
 				for num in string.gmatch(Execute[func], '\\(%d)') do if tonumber(num) > test then test=tonumber(num) end end
@@ -53,15 +53,14 @@ function Run()
 					local text = string.gsub(Execute[func], '\\(%d)(%b{})', function(num, list)
 						local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
 						for word in string.gmatch(list, '[^%|{}]+') do
-							local w,p = string.lower(word),string.lower(par)
-							if w == p or string.match(p, w) then
+							if string.lower(word) == string.lower(par) or string.match(par, word) then
 								return par
 							else
 								err = true
 							end
 						end
 					end)
-					text = string.gsub(text, '\\(%d)', function(num, list)
+					text = string.gsub(text, '\\(%d)', function(num)
 						return tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
 					end)
 					if not err then
@@ -73,9 +72,9 @@ function Run()
 			else
 				SKIN:Bang(Execute[string.lower(command)] or command)
 			end
-		elseif string.match(string.lower(command), '^http://') then
+		elseif string.match(string.lower(command), '^http://') then -- Http
 			SKIN:Bang('"'..command..'"')
-		else
+		else -- Basic
 			SKIN:Bang(Execute[string.lower(command)] or command)
 		end
 	end
