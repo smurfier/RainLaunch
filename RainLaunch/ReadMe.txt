@@ -12,10 +12,11 @@ Web
 	
 Calc
 	Executes Rainmeter style calculations.
+	Used by placing a equal sign before a matematical statement.
 	Outputs to the skin window. Right-click on the results to copy to the clipboard.
 	
 	Use:
-		Calc SQRT(9)
+		=SQRT(9)
 	
 ===== Defining Search Engines ===
 Search engines are defined in the [Search] section of Run.cfg
@@ -47,9 +48,11 @@ Placing \N denotes where the user input is placed. N is a number denoting a para
 
 In order to define a list of possible inputs, place the pipe delimited list inside of curly brackets after the input number.
 Lua pattern matching may also be used in input lists to validate the input.
+If a colon is placed in the first parameter in the list, everything before the colon is used to substitute the spaces in the user input.
 
 	Example:
 		music=!CommandMeasure NowPlaying "\1{Play|Pause|Next|Previous|SetVolume [%+%-]?%d+|SetPosition [%+%-]?%d+}"
+		test=!Log "\1{&:}"
 
 Spaces are used between parameters with the end being concatenated for the final parameter.
 Spaces are preserved in user input functions.
