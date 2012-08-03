@@ -1,5 +1,4 @@
 function Initialize()
-	Timer = -1
 	local file = io.input(SKIN:GetVariable('@') .. 'Run.cfg')
 	Execute = {}
 	Search = {}
@@ -50,23 +49,23 @@ function Run()
 					local err = false
 					local text = string.gsub(Execute[func], '\\(%d)(%b{})', function(num, list)
 						local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
+						local sub
 						if string.match(list, '{[^|}]+:') then
-							local sub
-							sub, list = string.match(list, '{(.+):([^}]*)')
-							subbed = string.gsub(par, '%s', sub)
+							sub, list = string.match(list, '{([^:]+):([^}]*)')
+							sub = string.gsub(par, '%s', sub)
 						end
 						if string.len(list) > 0 then
 							for word in string.gmatch(list, '[^%|{}]+') do
 								local w,p = string.lower(word),string.lower(par)
 								if w == p or string.match(p, w) then
 									err = false
-									return subbed or par
+									return sub or par
 								else
 									err = true
 								end
 							end
 						else
-							return subbed or par
+							return sub or par
 						end
 					end)
 					text = string.gsub(text, '\\(%d)', function(num)
