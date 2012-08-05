@@ -60,8 +60,14 @@ Spaces are preserved in user input functions.
 	Use:
 		Copy Some Text
 		Music SetVolume +10
+
 		
-		
+===== Built-In Commands =====
+
+!WriteToFile File Text
+	Writes a line to the end of a file. Quotes are required for parameters using spaces. If the file has contents, a new line is created.
+
+	
 ===== Known Limitiations =====
 Due to a limitation in Rainmeter, user-input text may not include quotation marks. If it does, the quotes will be stripped from the command.
 

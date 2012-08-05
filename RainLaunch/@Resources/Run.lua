@@ -25,10 +25,10 @@ end
 
 function Run()
 	local command = SKIN:GetVariable('Run')
-	local args = Delim(command, '%s')
+	local func = string.match(command, '^%s-(%a+)')
 	
-	if #args>0 then
-		local func = string.lower(table.remove(args, 1))
+	if string.len(func or '') > 0 then
+		local args = Params(string.match(command, '^%s-%a+ (.+)') or '')
 		if string.match(command, '^=.+') then
 			local value = SKIN:ParseFormula('('..string.match(command, '^=(.+)')..')')
 			Output(value)
@@ -72,21 +72,67 @@ function Run()
 						return tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
 					end)
 					if not err then
-						SKIN:Bang(text)
+						Send(text)
 					else
 						Output(func..': Invalid Parameter')
 					end
 				end
 			else
-				SKIN:Bang(Execute[string.lower(command)] or command)
+				Send(Execute[string.lower(command)] or command)
 			end
 		elseif string.match(string.lower(command), '^http://') then -- Http
-			SKIN:Bang('"'..command..'"')
+			Send('"'..command..'"')
 		else -- Basic
-			SKIN:Bang(Execute[string.lower(command)] or command)
+			Send(Execute[string.lower(command)] or command)
 		end
 	end
 	SKIN:Bang('!Update')
+end
+
+function Send(com)
+	local lbang = string.match(com, '^%s-!(%a+)')
+	local parms = string.match(com, '^%s-!%a+ (.+)')
+	
+	local tbl = {
+		writetofile = function()
+			--!WriteToFile File Text
+			local tbl = Params(parms)
+			if #tbl == 2 then
+				local hFile = io.open(SKIN:MakePathAbsolute(tbl[1]), 'a+')
+				if hFile then
+					local text = hFile:read('*all')
+					hFile:write(string.len(text)>0 and '\n' or '', tbl[2])
+					io.close(hFile)
+				else
+					Output('Invalid File: '..tbl[1])
+				end
+			end
+		end,
+		
+		default = function()
+			SKIN:Bang(com)
+		end
+	}
+	
+	local f = tbl[string.lower(lbang or '')] or tbl.default
+	f()
+end
+
+function Params(line)
+	local tbl,temp = {},{}
+	for word in string.gmatch(line, '[^%s]+') do
+		if string.match(word, '"$') and #temp>0 then
+			table.insert(temp, word)
+			local nword = string.match(table.concat(temp, ' '), '"(.+)"')
+			table.insert(tbl, nword)
+			temp = {}
+		elseif string.match(word, '^"') or #temp>0 then
+			table.insert(temp, word)
+		else
+			table.insert(tbl, word)
+		end
+	end
+	return tbl
 end
 
 function Output(outtext)
