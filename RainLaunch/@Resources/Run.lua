@@ -4,22 +4,28 @@ end
 
 function ReadIni(inputfile)
 	local file = io.open(inputfile, 'r')
-	local tbl = {}
-	local section
-	if file then
+	local tbl,section = {}
+	if not file then
+		print('Unable to open '..inputfile)
+	else
 		local strip = function(input, match) return string.match(input, '^%s*('..(match or '.-')..')%s*$') end
+		local num = 0
 		for line in file:lines() do
-			if not string.match(line, '^;')then
+			num = num+1
+			if not string.match(line, '^;') then
 				local key,command = string.match(line, '^([^=]+)=(.+)')
 				if string.match(line, '^%s-%[.+') then
 					section = string.lower(string.match(line, '^%s-%[([^%]]+)'))
 					if not tbl[section] then tbl[section] = {} end
 				elseif key and command and section then
 					tbl[section][strip(string.lower(key), '%S*')]=strip(command)
+				elseif #line > 0 and section and not key or command then
+					print(num..': Invalid property or value.')
 				end
 			end
 		end
-		io.close(file)
+		if not section then print('No sections found in '..inputfile) end
+		io.close(file)		
 	end
 	return tbl
 end
