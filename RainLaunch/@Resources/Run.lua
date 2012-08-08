@@ -1,25 +1,21 @@
 function Initialize()
-	local file = io.input(SKIN:GetVariable('@') .. 'Run.cfg')
-	Execute = {}
-	Search = {}
+	local infile = io.input(SKIN:GetVariable('@') .. 'Run.cfg')
+	File={}
 	local section
-	if io.type(file) == 'file' then
+	if infile then
+		local strip = function(input) return string.match(input, '^%s*(.-)%s*$') end
 		for line in io.lines() do
 			if not string.match(line, '^;')then
 				local key,command = string.match(line, '^([^=]+)=(.+)')
 				if string.match(line, '^%s-%[.+') then
 					section = string.lower(string.match(line, '^%s-%[([^%]]+)'))
+					if not File[section] then File[section] = {} end
 				elseif key and command and section then
-					local nkey = string.lower(key)
-					if section == 'search' then
-						Search[nkey] = command
-					elseif section == 'macros' then
-						Execute[nkey] = command
-					end
+					File[section][strip(string.lower(key))]=strip(command)
 				end
 			end
 		end
-		io.close(file)
+		io.close(infile)
 	end
 end
 
@@ -32,22 +28,22 @@ function Run()
 		if string.match(command, '^=.+') then
 			local value = SKIN:ParseFormula('('..string.match(command, '^=(.+)')..')')
 			Output(value)
-		elseif Search[func] and #args > 0 then -- Search
+		elseif File.search[func] and #args > 0 then -- Search
 			local text = table.concat(args, '%%20')
-			local line = string.gsub(Search[func], '\\1', text)
+			local line = string.gsub(File.search[func], '\\1', text)
 			SKIN:Bang('"'..line..'"')
 		elseif func == 'web' and #args > 0 then -- Web
 			local tbl = Delim(table.concat(args,'%%20'), '%.')
 			SKIN:Bang('"http://'..(#tbl >= 3 and '' or 'www.')..table.concat(tbl,'.')..(#tbl >= 2 and '"' or '.com"'))
-		elseif Execute[func] and #args > 0 then -- Custom
-			if string.match(Execute[func],'\\%d') then
+		elseif File.macros[func] and #args > 0 then -- Custom
+			if string.match(File.macros[func],'\\%d') then
 				local test = 0
-				for num in string.gmatch(Execute[func], '\\(%d)') do if tonumber(num) > test then test=tonumber(num) end end
+				for num in string.gmatch(File.macros[func], '\\(%d)') do if tonumber(num) > test then test=tonumber(num) end end
 				if #args < test then
 					Output(func..': Not Enough Parameters')
 				else
 					local err = false
-					local text = string.gsub(Execute[func], '\\(%d)(%b{})', function(num, list)
+					local text = string.gsub(File.macros[func], '\\(%d)(%b{})', function(num, list)
 						local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
 						local sub
 						if string.match(list, '{[^|}]+:') then
@@ -78,12 +74,12 @@ function Run()
 					end
 				end
 			else
-				Send(Execute[string.lower(command)] or command)
+				Send(File.macros[string.lower(command)] or command)
 			end
 		elseif string.match(string.lower(command), '^http://') then -- Http
 			Send('"'..command..'"')
 		else -- Basic
-			Send(Execute[string.lower(command)] or command)
+			Send(File.macros[string.lower(command)] or command)
 		end
 	end
 	SKIN:Bang('!Update')
@@ -95,14 +91,28 @@ function Send(com)
 	
 	local tbl = {
 		writetofile = function()
-			--!WriteToFile File Text
+			--!WriteToFile File Text Match
 			local tbl = Params(parms)
-			if #tbl == 2 then
-				local hFile = io.open(SKIN:MakePathAbsolute(tbl[1]), 'a+')
+			if #tbl >= 2 then
+				local hFile = io.open(SKIN:MakePathAbsolute(tbl[1]), 'r')
 				if hFile then
 					local text = hFile:read('*all')
-					hFile:write(string.len(text)>0 and '\n' or '', tbl[2])
 					io.close(hFile)
+					local rfile = function(...)
+						hFile = io.open(SKIN:MakePathAbsolute(tbl[1]), 'w')
+						hFile:write(unpack(arg))
+						io.close(hFile)
+					end
+					if #tbl == 3 then
+						local start = string.find(string.lower(text), string.lower(tbl[3]))
+						if start then
+							rfile(string.sub(text, 1, start-1), tbl[2], string.sub(text, start))
+						else
+							rfile(text, string.len(text)>0 and '\n' or '', tbl[2])
+						end
+					else
+						rfile(text, string.len(text)>0 and '\n' or '', tbl[2])
+					end
 				else
 					Output('Invalid File: '..tbl[1])
 				end
@@ -121,15 +131,15 @@ end
 function Params(line)
 	local tbl,temp = {},{}
 	for word in string.gmatch(line, '[^%s]+') do
-		if string.match(word, '"$') and #temp>0 then
+		if string.match(word, '"$') and #temp > 0 then
 			table.insert(temp, word)
 			local nword = string.match(table.concat(temp, ' '), '"(.+)"')
-			table.insert(tbl, nword)
+			table.insert(tbl, SKIN:ReplaceVariables(nword))
 			temp = {}
-		elseif string.match(word, '^"') or #temp>0 then
+		elseif string.match(word, '^"') or #temp > 0 then
 			table.insert(temp, word)
 		else
-			table.insert(tbl, word)
+			table.insert(tbl, SKIN:ReplaceVariables(word))
 		end
 	end
 	return tbl
