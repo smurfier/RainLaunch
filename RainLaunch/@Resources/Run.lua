@@ -1,22 +1,27 @@
 function Initialize()
-	local infile = io.input(SKIN:GetVariable('@') .. 'Run.cfg')
-	File={}
+	File = ReadIni(SKIN:GetVariable('@') .. 'Run.cfg')
+end
+
+function ReadIni(inputfile)
+	local file = io.open(inputfile, 'r')
+	local tbl = {}
 	local section
-	if infile then
-		local strip = function(input) return string.match(input, '^%s*(.-)%s*$') end
-		for line in io.lines() do
+	if file then
+		local strip = function(input, match) return string.match(input, '^%s*('..(match or '.-')..')%s*$') end
+		for line in file:lines() do
 			if not string.match(line, '^;')then
 				local key,command = string.match(line, '^([^=]+)=(.+)')
 				if string.match(line, '^%s-%[.+') then
 					section = string.lower(string.match(line, '^%s-%[([^%]]+)'))
-					if not File[section] then File[section] = {} end
+					if not tbl[section] then tbl[section] = {} end
 				elseif key and command and section then
-					File[section][strip(string.lower(key))]=strip(command)
+					tbl[section][strip(string.lower(key), '%S*')]=strip(command)
 				end
 			end
 		end
-		io.close(infile)
+		io.close(file)
 	end
+	return tbl
 end
 
 function Run()
@@ -33,7 +38,8 @@ function Run()
 			local line = string.gsub(File.search[func], '\\1', text)
 			SKIN:Bang('"'..line..'"')
 		elseif func == 'web' and #args > 0 then -- Web
-			local tbl = Delim(table.concat(args,'%%20'), '%.')
+			local tbl = {}
+			for word in string.gmatch(table.concat(args,'%%20'), '[^.]+') do table.insert(tbl, word) end
 			SKIN:Bang('"http://'..(#tbl >= 3 and '' or 'www.')..table.concat(tbl,'.')..(#tbl >= 2 and '"' or '.com"'))
 		elseif File.macros[func] and #args > 0 then -- Custom
 			if string.match(File.macros[func],'\\%d') then
@@ -130,7 +136,7 @@ end
 
 function Params(line)
 	local tbl,temp = {},{}
-	for word in string.gmatch(line, '[^%s]+') do
+	for word in string.gmatch(line, '%S+') do
 		if string.match(word, '"$') and #temp > 0 then
 			table.insert(temp, word)
 			local nword = string.match(table.concat(temp, ' '), '"(.+)"')
@@ -148,10 +154,4 @@ end
 function Output(outtext)
 	SKIN:Bang('!EnableMeasure', 'Reset')
 	SKIN:Bang('!SetVariable', 'Output', outtext)
-end
-
-function Delim(input, delimiter)
-	local tbl = {}
-	for word in string.gmatch(input, '[^'..delimiter..']+') do table.insert(tbl, word) end
-	return tbl
 end
