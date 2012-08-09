@@ -47,46 +47,42 @@ function Run()
 			local tbl = {}
 			for word in string.gmatch(table.concat(args,'%%20'), '[^.]+') do table.insert(tbl, word) end
 			SKIN:Bang('"http://'..(#tbl >= 3 and '' or 'www.')..table.concat(tbl,'.')..(#tbl >= 2 and '"' or '.com"'))
-		elseif File.macros[func] and #args > 0 then -- Custom
-			if string.match(File.macros[func],'\\%d') then
-				local test = 0
-				for num in string.gmatch(File.macros[func], '\\(%d)') do if tonumber(num) > test then test=tonumber(num) end end
-				if #args < test then
-					Output(func..': Not Enough Parameters')
-				else
-					local err = false
-					local text = string.gsub(File.macros[func], '\\(%d)(%b{})', function(num, list)
-						local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
-						local sub
-						if string.match(list, '{[^|}]+:') then
-							sub, list = string.match(list, '{([^:]+):([^}]*)')
-							sub = string.gsub(par, '%s', sub)
-						end
-						if string.len(list) > 0 then
-							for word in string.gmatch(list, '[^%|{}]+') do
-								local w,p = string.lower(word),string.lower(par)
-								if w == p or string.match(p, w) then
-									err = false
-									return sub or par
-								else
-									err = true
-								end
-							end
-						else
-							return sub or par
-						end
-					end)
-					text = string.gsub(text, '\\(%d)', function(num)
-						return tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
-					end)
-					if not err then
-						Send(text)
-					else
-						Output(func..': Invalid Parameter')
-					end
-				end
+		elseif File.macros[func] and #args > 0 and string.match(File.macros[func] or '','\\%d') then -- Custom
+			local test = 0
+			for num in string.gmatch(File.macros[func], '\\(%d)') do if tonumber(num) > test then test=tonumber(num) end end
+			if #args < test then
+				Output(func..': Not Enough Parameters')
 			else
-				Send(File.macros[string.lower(command)] or command)
+				local err = false
+				local text = string.gsub(File.macros[func], '\\(%d)(%b{})', function(num, list)
+					local par = tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
+					local sub
+					if string.match(list, '{[^|}]+:') then
+						sub, list = string.match(list, '{([^:]+):([^}]*)')
+						sub = string.gsub(par, '%s', sub)
+					end
+					if string.len(list) > 0 then
+						for word in string.gmatch(list, '[^%|{}]+') do
+							local w,p = string.lower(word),string.lower(par)
+							if w == p or string.match(p, w) then
+								err = false
+								return sub or par
+							else
+								err = true
+							end
+						end
+					else
+						return sub or par
+					end
+				end)
+				text = string.gsub(text, '\\(%d)', function(num)
+					return tonumber(num) == test and table.concat(args, ' ', test) or (args[tonumber(num)] or '\\'..num)
+				end)
+				if not err then
+					Send(text)
+				else
+					Output(func..': Invalid Parameter')
+				end
 			end
 		elseif string.match(string.lower(command), '^http://') then -- Http
 			Send('"'..command..'"')
