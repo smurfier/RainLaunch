@@ -4,26 +4,42 @@ end
 
 function ReadIni(inputfile)
 	local file = io.open(inputfile, 'r')
-	local tbl , section = {}
+	local tbl, include, section = {}, {}
 	if not file then
 		print('Unable to open ' .. inputfile)
 	else
 		local num = 0
 		for line in file:lines() do
-			num = num+1
+			num = num + 1
 			if not line:match('^%s-;') then
 				local key, command = line:match('^([^=]+)=(.+)')
 				if line:match('^%s-%[.+') then
 					section = line:lower():match('^%s-%[([^%]]+)')
 					if not tbl[section] then tbl[section] = {} end
 				elseif key and command and section then
-					tbl[section][key:lower():match('^%s*(%S*)%s*$')] = command:match('^%s*(.-)%s*$')
+					local nkey, ncommand = key:lower():match('^%s*(%S*)%s*$'), command:match('^%s*(.-)%s*$')
+					if nkey:match('@include') then
+						table.insert(include, ReadIni(SKIN:MakePathAbsolute(SKIN:ReplaceVariables(ncommand))))
+					else
+						tbl[section][nkey] = ncommand
+					end
 				elseif #line > 0 and section and not key or command then
 					print(num..': Invalid property or value.')
 				end
 			end
 		end
 		if not section then print('No sections found in '..inputfile) end
+		if #include > 0 then
+			for _, a in pairs(include) do
+				for s, list in pairs(a) do
+					for k, c in pairs(list) do
+						if not tbl[s][k] then
+							tbl[s][k] = c
+						end
+					end
+				end
+			end
+		end
 		file:close()
 	end
 	return tbl
@@ -142,7 +158,7 @@ function Params(line)
 	for word in line:gmatch('%S+') do
 		if word:match('^"') and not quote then -- Start Quote.
 			quote = word:match('^"""') and '"""' or '"'
-			if word:match(, quote..'$') then -- Make allowance for parameters using quotes without spaces.
+			if word:match(quote..'$') then -- Make allowance for parameters using quotes without spaces.
 				add(word:match(quote..'(.+)'..quote))
 				quote = nil
 			else
