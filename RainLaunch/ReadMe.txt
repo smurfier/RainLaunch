@@ -74,6 +74,8 @@ In the list of commands below, parameters enclosed by [square brackets] indicate
 	
 ===== Known Limitiations =====
 
+Using tabs in Run.cfg may break the script.
+
 Using quotes in user input may cause unexpected results.
 
 With the current implementation of Lua, the use of Unicode characters is unwise.

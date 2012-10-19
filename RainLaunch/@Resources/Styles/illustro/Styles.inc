@@ -49,15 +49,14 @@ Text="Run"
 [OutputMeter]
 Meter=String
 MeterStyle=styleLeftText
-Text=#Output#
+MeasureName=Lua
 X=10
 Y=40
 W=190
 H=14
 ToolTipText=Left click to Run.#CRLF#Right click to copy output to the clipboard.
 LeftMouseUpAction=!CommandMeasure InputText "ExecuteBatch 1"
-RightMouseUpAction=!SetClip """#Output#"""
-DynamicVariables=1
+RightMouseUpAction=!SetClip """[Lua]"""
 
 [meterSeperator]
 Meter=IMAGE
